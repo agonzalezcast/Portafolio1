@@ -1,5 +1,8 @@
-package gonzalez.alexander.bl;
+package gonzalez.alexander.bl.entities;
 
+import gonzalez.alexander.dl.Conector;
+
+import java.sql.ResultSet;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -8,18 +11,24 @@ public class Tarea {
     //Atributos
     private String iD;
     private LocalDateTime fechaLimite;
-    private DateTimeFormatter formato = DateTimeFormatter.ofPattern("'Fecha: 'dd-MM-yyyy' | Hora: 'HH:mm");
+    private DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
     private String descripcion;
     private boolean completada;
-    private static int contador = 0;
 
-    //Constructor
-    public Tarea(LocalDateTime fechaLimite, String descripcion) {
+    //Constructores
+    public Tarea(LocalDateTime fechaLimite, String descripcion) throws Exception {
+        int numeroUltimoID = numeroUltimoID()+1;
         this.fechaLimite = fechaLimite;
         this.descripcion = descripcion;
-        contador++;
-        this.iD = "T-" + contador;
+        this.iD = "T-" + numeroUltimoID;
         this.completada = false;
+    }
+
+    public Tarea(String iD, LocalDateTime fechaLimite, String descripcion, boolean completada) {
+        this.iD = iD;
+        this.fechaLimite = fechaLimite;
+        this.descripcion = descripcion;
+        this.completada = completada;
     }
 
     //Getters
@@ -71,5 +80,21 @@ public class Tarea {
     public boolean estaEnRango(LocalDateTime inicio, LocalDateTime fin) {
         return !fechaLimite.isBefore(inicio) && !fechaLimite.isAfter(fin);
     }
+
+    //Metodo para que el numero de ID no se reinicie cada vez que se corre el programa
+    private static int numeroUltimoID() throws Exception {
+        String query = "SELECT * FROM t_tareas ORDER BY id DESC LIMIT 1;";
+        ResultSet resultado = Conector.getConexion().ejecutarQuery(query);
+        if(!resultado.next()) return 0;
+        String id = resultado.getString("id");
+        return Integer.parseInt(id.substring(2));
+    }
+
+    //Actualizar datos de fecha limite y descripcion
+    public void actualizarTarea(LocalDateTime nuevaFechaLimite, String nuevaDescripcion) throws Exception {
+        this.fechaLimite = nuevaFechaLimite;
+        this.descripcion = nuevaDescripcion;
+    }
+
 
 }
